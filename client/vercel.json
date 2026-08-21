@@ -6,6 +6,17 @@
         },
         {
             "source": "/(.*)",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "User-Agent",
+                    "value": ".*(facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|slackbot|discordbot|crawler|bot|spider|embed|pinterest|googlebot|pinterest|google-structured-data).*"
+                }
+            ],
+            "destination": "/api/seo/render?path=/$1"
+        },
+        {
+            "source": "/(.*)",
             "destination": "/"
         }
     ]

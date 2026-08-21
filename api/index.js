@@ -11,6 +11,7 @@ import CommentRouote from './routes/Comment.route.js'
 import BlogLikeRoute from './routes/Bloglike.route.js'
 import SiteSettingsRoute from './routes/SiteSettings.route.js'
 import SitemapRoute from './routes/Sitemap.route.js'
+import SeoRoute from './routes/Seo.route.js'
 import { decode } from 'entities'
 
 dotenv.config()
@@ -35,6 +36,7 @@ app.use('/api/blog', BlogRoute)
 app.use('/api/comment', CommentRouote)
 app.use('/api/blog-like', BlogLikeRoute)
 app.use('/api/site-settings', SiteSettingsRoute)
+app.use('/api/seo', SeoRoute)
 app.use('/', SitemapRoute)
 
 
