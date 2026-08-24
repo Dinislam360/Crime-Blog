@@ -20,76 +20,102 @@
   <body>
     <div id="root"></div>
     <script type="module">
+      // Apply settings dynamically to the HTML head
+      function applySiteSettings(settings) {
+        if (!settings) return;
+
+        // Title
+        document.title = settings.seo?.title || settings.websiteTitle || settings.websiteName || 'My Blog';
+
+        // Description meta
+        let descMeta = document.querySelector("meta[name='description']");
+        if (!descMeta) {
+          descMeta = document.createElement('meta');
+          descMeta.name = 'description';
+          document.head.appendChild(descMeta);
+        }
+        descMeta.content = settings.seo?.description || '';
+
+        // OG title
+        let ogTitle = document.querySelector("meta[property='og:title']");
+        if (!ogTitle) {
+          ogTitle = document.createElement('meta');
+          ogTitle.property = 'og:title';
+          document.head.appendChild(ogTitle);
+        }
+        ogTitle.content = settings.seo?.title || settings.websiteTitle || settings.websiteName || 'My Blog';
+
+        // OG description
+        let ogDesc = document.querySelector("meta[property='og:description']");
+        if (!ogDesc) {
+          ogDesc = document.createElement('meta');
+          ogDesc.property = 'og:description';
+          document.head.appendChild(ogDesc);
+        }
+        ogDesc.content = settings.seo?.description || '';
+
+        // OG image
+        if (settings.seo?.image) {
+          let ogImg = document.querySelector("meta[property='og:image']");
+          if (!ogImg) {
+            ogImg = document.createElement('meta');
+            ogImg.property = 'og:image';
+            document.head.appendChild(ogImg);
+          }
+          ogImg.content = settings.seo.image;
+        }
+
+        // OG url
+        let ogUrl = document.querySelector("meta[property='og:url']");
+        if (!ogUrl) {
+          ogUrl = document.createElement('meta');
+          ogUrl.property = 'og:url';
+          document.head.appendChild(ogUrl);
+        }
+        ogUrl.content = window.location.href;
+
+        // Favicon
+        let faviconLink = document.querySelector("link[rel~='icon']");
+        if (settings.favicon?.url) {
+          if (!faviconLink) {
+            faviconLink = document.createElement('link');
+            faviconLink.rel = 'icon';
+            document.head.appendChild(faviconLink);
+          }
+          faviconLink.href = settings.favicon.url;
+        } else {
+          if (faviconLink) {
+            faviconLink.href = '/vite.svg';
+          }
+        }
+      }
+
       // Fetch site settings and inject into head before React loads
       async function injectSiteSettings() {
         try {
-          const res = await fetch('/api/site-settings/get');
+          // 1. Try to load from localStorage synchronously first (instant, zero network latency)
+          const cached = localStorage.getItem('site_settings');
+          if (cached) {
+            applySiteSettings(JSON.parse(cached));
+          }
+        } catch (e) {
+          console.error('Error loading cached settings:', e);
+        }
+
+        try {
+          // 2. Fetch fresh settings in background (support dev backend port 3000)
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const apiUrl = isLocalhost ? 'http://localhost:3000/api/site-settings/get' : '/api/site-settings/get';
+          
+          const res = await fetch(apiUrl);
           if (!res.ok) throw new Error('Failed to fetch');
           const { settings } = await res.json();
-          if (!settings) return;
-
-          // Title
-          document.title = settings.seo?.title || settings.websiteTitle || settings.websiteName || 'My Blog';
-
-          // Description meta
-          let descMeta = document.querySelector("meta[name='description']");
-          if (!descMeta) {
-            descMeta = document.createElement('meta');
-            descMeta.name = 'description';
-            document.head.appendChild(descMeta);
-          }
-          descMeta.content = settings.seo?.description || '';
-
-          // OG title
-          let ogTitle = document.querySelector("meta[property='og:title']");
-          if (!ogTitle) {
-            ogTitle = document.createElement('meta');
-            ogTitle.property = 'og:title';
-            document.head.appendChild(ogTitle);
-          }
-          ogTitle.content = settings.seo?.title || settings.websiteTitle || settings.websiteName || 'My Blog';
-
-          // OG description
-          let ogDesc = document.querySelector("meta[property='og:description']");
-          if (!ogDesc) {
-            ogDesc = document.createElement('meta');
-            ogDesc.property = 'og:description';
-            document.head.appendChild(ogDesc);
-          }
-          ogDesc.content = settings.seo?.description || '';
-
-          // OG image
-          if (settings.seo?.image) {
-            let ogImg = document.querySelector("meta[property='og:image']");
-            if (!ogImg) {
-              ogImg = document.createElement('meta');
-              ogImg.property = 'og:image';
-              document.head.appendChild(ogImg);
-            }
-            ogImg.content = settings.seo.image;
-          }
-
-          // OG url
-          let ogUrl = document.querySelector("meta[property='og:url']");
-          if (!ogUrl) {
-            ogUrl = document.createElement('meta');
-            ogUrl.property = 'og:url';
-            document.head.appendChild(ogUrl);
-          }
-          ogUrl.content = window.location.href;
-
-          // Favicon
-          if (settings.favicon?.url) {
-            let faviconLink = document.querySelector("link[rel~='icon']");
-            if (!faviconLink) {
-              faviconLink = document.createElement('link');
-              faviconLink.rel = 'icon';
-              document.head.appendChild(faviconLink);
-            }
-            faviconLink.href = settings.favicon.url;
+          if (settings) {
+            applySiteSettings(settings);
+            localStorage.setItem('site_settings', JSON.stringify(settings));
           }
         } catch (error) {
-          console.error('Error injecting site settings:', error);
+          console.error('Error background fetching site settings:', error);
         }
       }
       injectSiteSettings();

@@ -33,6 +33,23 @@ const siteSettingsSchema = new mongoose.Schema({
             default: ''
         }
     },
+    logoDisplayMode: {
+        type: String,
+        enum: ['logo-only', 'text-only', 'both'],
+        default: 'logo-only'
+    },
+    logoTextColor: {
+        type: String,
+        default: '#000000'
+    },
+    logoTextBorderSize: {
+        type: Number,
+        default: 0
+    },
+    logoTextBorderColor: {
+        type: String,
+        default: '#000000'
+    },
     seo: {
         title: {
             type: String,

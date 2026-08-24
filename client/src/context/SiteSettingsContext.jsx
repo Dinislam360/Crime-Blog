@@ -6,8 +6,15 @@ const SiteSettingsContext = createContext();
 export const useSiteSettings = () => useContext(SiteSettingsContext);
 
 export const SiteSettingsProvider = ({ children }) => {
-    const [settings, setSettings] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [settings, setSettings] = useState(() => {
+        try {
+            const cached = localStorage.getItem('site_settings');
+            return cached ? JSON.parse(cached) : null;
+        } catch (e) {
+            return null;
+        }
+    });
+    const [loading, setLoading] = useState(settings ? false : true);
 
     const fetchSettings = async () => {
         try {
@@ -15,6 +22,7 @@ export const SiteSettingsProvider = ({ children }) => {
             const data = await res.json();
             if (data.success && data.settings) {
                 setSettings(data.settings);
+                localStorage.setItem('site_settings', JSON.stringify(data.settings));
             }
         } catch (error) {
             console.error('Error fetching site settings:', error);
@@ -35,14 +43,18 @@ export const SiteSettingsProvider = ({ children }) => {
         document.title = settings.seo?.title || settings.websiteTitle || settings.websiteName || 'My Blog';
 
         // Favicon
+        let faviconLink = document.querySelector("link[rel~='icon']");
         if (settings.favicon?.url) {
-            let faviconLink = document.querySelector("link[rel~='icon']");
             if (!faviconLink) {
                 faviconLink = document.createElement('link');
                 faviconLink.rel = 'icon';
                 document.head.appendChild(faviconLink);
             }
             faviconLink.href = settings.favicon.url;
+        } else {
+            if (faviconLink) {
+                faviconLink.href = '/vite.svg';
+            }
         }
 
         // Description Meta

@@ -24,6 +24,11 @@ const SiteSettings = () => {
     const [seoKeywords, setSeoKeywords] = useState('');
     const [seoAuthor, setSeoAuthor] = useState('');
 
+    const [logoDisplayMode, setLogoDisplayMode] = useState('logo-only');
+    const [logoTextColor, setLogoTextColor] = useState('#000000');
+    const [logoTextBorderSize, setLogoTextBorderSize] = useState(0);
+    const [logoTextBorderColor, setLogoTextBorderColor] = useState('#000000');
+
     // Load initial values from context
     useEffect(() => {
         if (settings) {
@@ -34,6 +39,10 @@ const SiteSettings = () => {
             setSeoDescription(settings.seo?.description || '');
             setSeoKeywords(settings.seo?.keywords || '');
             setSeoAuthor(settings.seo?.author || '');
+            setLogoDisplayMode(settings.logoDisplayMode || 'logo-only');
+            setLogoTextColor(settings.logoTextColor || '#000000');
+            setLogoTextBorderSize(settings.logoTextBorderSize || 0);
+            setLogoTextBorderColor(settings.logoTextBorderColor || '#000000');
         }
     }, [settings]);
 
@@ -51,6 +60,10 @@ const SiteSettings = () => {
                     websiteName,
                     websiteTitle,
                     footerText,
+                    logoDisplayMode,
+                    logoTextColor,
+                    logoTextBorderSize: Number(logoTextBorderSize),
+                    logoTextBorderColor,
                     seo: {
                         title: seoTitle,
                         description: seoDescription,
@@ -126,6 +139,48 @@ const SiteSettings = () => {
         }
     };
 
+    const handleDeleteLogo = async () => {
+        if (!window.confirm('Are you sure you want to remove the website logo?')) return;
+        setLogoUploading(true);
+        try {
+            const res = await fetch(`${getEnv('VITE_API_BASE_URL')}/site-settings/delete-logo`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to remove logo');
+            }
+            showToast('success', 'Logo removed successfully!');
+            refreshSettings();
+        } catch (error) {
+            showToast('error', error.message);
+        } finally {
+            setLogoUploading(false);
+        }
+    };
+
+    const handleDeleteFavicon = async () => {
+        if (!window.confirm('Are you sure you want to remove the website favicon?')) return;
+        setFaviconUploading(true);
+        try {
+            const res = await fetch(`${getEnv('VITE_API_BASE_URL')}/site-settings/delete-favicon`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to remove favicon');
+            }
+            showToast('success', 'Favicon removed successfully!');
+            refreshSettings();
+        } catch (error) {
+            showToast('error', error.message);
+        } finally {
+            setFaviconUploading(false);
+        }
+    };
+
     if (contextLoading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -182,6 +237,78 @@ const SiteSettings = () => {
                                         onChange={(e) => setFooterText(e.target.value)}
                                         placeholder="© Copyright 2024 | Designed & Developed By: Vynlo"
                                     />
+                                </div>
+
+                                <hr className="my-4" />
+                                <h3 className="font-semibold text-gray-700 text-sm">Logo & Branding Style</h3>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="logoDisplayMode">Logo Display Mode</Label>
+                                        <select
+                                            id="logoDisplayMode"
+                                            value={logoDisplayMode}
+                                            onChange={(e) => setLogoDisplayMode(e.target.value)}
+                                            className="w-full border rounded-md p-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                        >
+                                            <option value="logo-only">Logo (Image) Only</option>
+                                            <option value="text-only">Name (Text) Only</option>
+                                            <option value="both">Both Logo and Name</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="logoTextColor">Logo Text Color</Label>
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                id="logoTextColor"
+                                                type="color"
+                                                value={logoTextColor}
+                                                onChange={(e) => setLogoTextColor(e.target.value)}
+                                                className="w-12 h-10 p-1 cursor-pointer"
+                                            />
+                                            <Input 
+                                                type="text"
+                                                value={logoTextColor}
+                                                onChange={(e) => setLogoTextColor(e.target.value)}
+                                                placeholder="#000000"
+                                                className="font-mono h-10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="logoTextBorderSize">Logo Text Border Size (px)</Label>
+                                        <Input 
+                                            id="logoTextBorderSize"
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            value={logoTextBorderSize}
+                                            onChange={(e) => setLogoTextBorderSize(Number(e.target.value))}
+                                            placeholder="0"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="logoTextBorderColor">Logo Text Border Color</Label>
+                                        <div className="flex gap-2">
+                                            <Input 
+                                                id="logoTextBorderColor"
+                                                type="color"
+                                                value={logoTextBorderColor}
+                                                onChange={(e) => setLogoTextBorderColor(e.target.value)}
+                                                className="w-12 h-10 p-1 cursor-pointer"
+                                            />
+                                            <Input 
+                                                type="text"
+                                                value={logoTextBorderColor}
+                                                onChange={(e) => setLogoTextBorderColor(e.target.value)}
+                                                placeholder="#000000"
+                                                className="font-mono h-10"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -270,7 +397,7 @@ const SiteSettings = () => {
                                 ) : (
                                     <div className="text-sm text-gray-400 italic text-center p-4 border border-dashed rounded-lg">No custom logo uploaded</div>
                                 )}
-                                <div className="relative">
+                                <div className="relative flex gap-2">
                                     <input 
                                         type="file" 
                                         id="logo-upload" 
@@ -290,6 +417,18 @@ const SiteSettings = () => {
                                             {settings?.logo?.url ? 'Change Logo' : 'Upload Logo'}
                                         </label>
                                     </Button>
+                                    {settings?.logo?.url && (
+                                        <Button 
+                                            type="button" 
+                                            variant="destructive" 
+                                            onClick={handleDeleteLogo}
+                                            disabled={logoUploading}
+                                            className="px-3 h-10"
+                                            title="Remove Logo"
+                                        >
+                                            Remove
+                                        </Button>
+                                    )}
                                 </div>
                                 <p className="text-xs text-gray-400 text-center">Auto-resized to max 400x100px with optimized ratio</p>
                             </div>
@@ -306,7 +445,7 @@ const SiteSettings = () => {
                                 ) : (
                                     <div className="text-sm text-gray-400 italic text-center p-4 border border-dashed rounded-lg">No custom favicon uploaded</div>
                                 )}
-                                <div className="relative">
+                                <div className="relative flex gap-2">
                                     <input 
                                         type="file" 
                                         id="favicon-upload" 
@@ -326,6 +465,18 @@ const SiteSettings = () => {
                                             {settings?.favicon?.url ? 'Change Favicon' : 'Upload Favicon'}
                                         </label>
                                     </Button>
+                                    {settings?.favicon?.url && (
+                                        <Button 
+                                            type="button" 
+                                            variant="destructive" 
+                                            onClick={handleDeleteFavicon}
+                                            disabled={faviconUploading}
+                                            className="px-3 h-10"
+                                            title="Remove Favicon"
+                                        >
+                                            Remove
+                                        </Button>
+                                    )}
                                 </div>
                                 <p className="text-xs text-gray-400 text-center">Auto-resized to perfectly square 64x64px favicon</p>
                             </div>

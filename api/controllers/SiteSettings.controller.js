@@ -60,7 +60,7 @@ export const getSiteSettings = async (req, res, next) => {
 // Update site settings (admin only)
 export const updateSiteSettings = async (req, res, next) => {
     try {
-        const { websiteName, websiteTitle, footerText, seo } = req.body;
+        const { websiteName, websiteTitle, footerText, seo, logoDisplayMode, logoTextColor, logoTextBorderSize, logoTextBorderColor } = req.body;
         
         let settings = await SiteSettings.findOne();
         
@@ -72,6 +72,10 @@ export const updateSiteSettings = async (req, res, next) => {
         if (websiteName !== undefined) settings.websiteName = websiteName;
         if (websiteTitle !== undefined) settings.websiteTitle = websiteTitle;
         if (footerText !== undefined) settings.footerText = footerText;
+        if (logoDisplayMode !== undefined) settings.logoDisplayMode = logoDisplayMode;
+        if (logoTextColor !== undefined) settings.logoTextColor = logoTextColor;
+        if (logoTextBorderSize !== undefined) settings.logoTextBorderSize = logoTextBorderSize;
+        if (logoTextBorderColor !== undefined) settings.logoTextBorderColor = logoTextBorderColor;
         
         // Update SEO settings
         if (seo) {
@@ -168,6 +172,50 @@ export const uploadFavicon = async (req, res, next) => {
             success: true,
             message: 'Favicon uploaded successfully.',
             favicon: settings.favicon
+        });
+    } catch (error) {
+        next(handleError(500, error.message || 'Internal server error'));
+    }
+};
+
+// Delete logo (admin only)
+export const deleteLogo = async (req, res, next) => {
+    try {
+        let settings = await SiteSettings.findOne();
+        if (settings && settings.logo && settings.logo.publicId) {
+            await deleteFromCloudinary(settings.logo.publicId);
+            settings.logo = { url: '', publicId: '' };
+            await settings.save();
+        } else if (settings) {
+            settings.logo = { url: '', publicId: '' };
+            await settings.save();
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Logo deleted successfully.',
+            logo: settings?.logo || { url: '', publicId: '' }
+        });
+    } catch (error) {
+        next(handleError(500, error.message || 'Internal server error'));
+    }
+};
+
+// Delete favicon (admin only)
+export const deleteFavicon = async (req, res, next) => {
+    try {
+        let settings = await SiteSettings.findOne();
+        if (settings && settings.favicon && settings.favicon.publicId) {
+            await deleteFromCloudinary(settings.favicon.publicId);
+            settings.favicon = { url: '', publicId: '' };
+            await settings.save();
+        } else if (settings) {
+            settings.favicon = { url: '', publicId: '' };
+            await settings.save();
+        }
+        res.status(200).json({
+            success: true,
+            message: 'Favicon deleted successfully.',
+            favicon: settings?.favicon || { url: '', publicId: '' }
         });
     } catch (error) {
         next(handleError(500, error.message || 'Internal server error'));

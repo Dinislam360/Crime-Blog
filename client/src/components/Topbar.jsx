@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import logo from '@/assets/images/logo-white.png'
+import Logo from './Logo'
 import { Button } from './ui/button'
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { Link, useNavigate } from 'react-router-dom'
@@ -36,7 +36,6 @@ const Topbar = () => {
     const navigate = useNavigate()
     const user = useSelector((state) => state.user)
     const { settings } = useSiteSettings()
-    const logoUrl = settings?.logo?.url || logo
 
 
     const handleLogout = async () => {
@@ -67,8 +66,8 @@ const Topbar = () => {
                 <button onClick={toggleSidebar} className='md:hidden' type='button'>
                     <AiOutlineMenu />
                 </button>
-                <Link to={RouteIndex}>
-                    <img src={logoUrl} className='md:w-auto w-48 max-h-12 object-contain' alt={settings?.websiteName || "Logo"} />
+                <Link to={RouteIndex} className="flex items-center">
+                    <Logo />
                 </Link>
             </div>
             <div className='w-[500px]'>
