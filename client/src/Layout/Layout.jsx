@@ -11,7 +11,7 @@ const Layout = () => {
         <SidebarProvider>
             <Topbar />
             <AppSidebar />
-            <main className='w-full'>
+            <main className='flex-1 min-w-0 overflow-x-clip'>
                 <div className='w-full min-h-[calc(100vh-45px)] py-28  px-10'>
                     <Outlet />
                 </div>

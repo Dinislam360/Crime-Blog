@@ -60,9 +60,9 @@ const SingleBlogDetails = () => {
     if (loading) return <Loading />
     return (
 
-        <div className='md:flex-nowrap flex-wrap flex justify-between gap-20'>
+        <div className='md:flex-nowrap flex-wrap flex justify-between gap-10 lg:gap-20'>
             {data && data.blog &&
-                <div className='md:w-[70%] w-full flex flex-col gap-10'>
+                <div className='md:flex-1 w-full min-w-0 flex flex-col gap-10'>
                     <div className='border rounded p-5'>
                         <h1 className='text-2xl font-bold mb-5'>{data.blog.title}</h1>
                         <div className='flex justify-between items-center'>
@@ -81,10 +81,10 @@ const SingleBlogDetails = () => {
                             </div>
                         </div>
                         <div className='my-5'>
-                            <img src={data.blog.featuredImage} className='rounded' />
+                            <img src={data.blog.featuredImage} className='rounded w-full h-auto max-h-[500px] object-cover' />
                         </div>
-                        <div className="ql-container ql-snow" style={{ border: 'none' }}>
-                            <div className="ql-editor" style={{ padding: 0 }} dangerouslySetInnerHTML={{ __html: decode(data.blog.blogContent) || '' }}>
+                        <div className="ql-container ql-snow" style={{ border: 'none', height: 'auto' }}>
+                            <div className="ql-editor" style={{ padding: 0, height: 'auto', overflowY: 'visible' }} dangerouslySetInnerHTML={{ __html: decode(data.blog.blogContent) || '' }}>
 
                             </div>
                         </div>
@@ -96,7 +96,7 @@ const SingleBlogDetails = () => {
                 </div>
 
             }
-            <div className='border rounded md:w-[30%] w-full p-5 h-fit'>
+            <div className='border rounded md:w-[30%] w-full p-5 h-fit md:shrink-0'>
                 <RelatedBlog props={{ category: category, currentBlog: blog }} />
             </div>
         </div>
