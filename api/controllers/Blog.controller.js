@@ -45,8 +45,10 @@ export const addBlog = async (req, res, next) => {
         const metaTitle = data.title
         const metaDescription = generateMetaDescription(data.blogContent)
 
+        const authorId = req.user.role === 'admin' ? (data.author || req.user._id) : req.user._id;
+
         const blog = new Blog({
-            author: data.author,
+            author: authorId,
             category: data.category,
             title: data.title,
             slug: `${data.slug}-${Math.round(Math.random() * 100000)}`,
@@ -87,6 +89,14 @@ export const updateBlog = async (req, res, next) => {
         const data = JSON.parse(req.body.data)
 
         const blog = await Blog.findById(blogid)
+        if (!blog) {
+            return next(handleError(404, 'Blog not found.'))
+        }
+
+        // Authorization check: Only the author or an admin can update this blog
+        if (blog.author.toString() !== req.user._id && req.user.role !== 'admin') {
+            return next(handleError(403, 'You are not authorized to update this blog.'))
+        }
 
         blog.category = data.category
         blog.title = data.title
@@ -128,6 +138,16 @@ export const updateBlog = async (req, res, next) => {
 export const deleteBlog = async (req, res, next) => {
     try {
         const { blogid } = req.params
+        const blog = await Blog.findById(blogid)
+        if (!blog) {
+            return next(handleError(404, 'Blog not found.'))
+        }
+
+        // Authorization check: Only the author or an admin can delete this blog
+        if (blog.author.toString() !== req.user._id && req.user.role !== 'admin') {
+            return next(handleError(403, 'You are not authorized to delete this blog.'))
+        }
+
         await Blog.findByIdAndDelete(blogid)
         res.status(200).json({
             success: true,

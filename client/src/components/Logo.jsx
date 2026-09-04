@@ -15,7 +15,9 @@ const Logo = ({ className = "" }) => {
 
     // Text Style for Custom styling
     const textStyle = {
+        fontFamily: "'Complete Destroy', sans-serif",
         color: settings?.logoTextColor || '#000000',
+        fontSize: settings?.logoTextFontSize ? `${settings.logoTextFontSize}px` : undefined,
         WebkitTextStroke: settings?.logoTextBorderSize && settings?.logoTextBorderColor 
             ? `${settings.logoTextBorderSize}px ${settings.logoTextBorderColor}`
             : 'none',

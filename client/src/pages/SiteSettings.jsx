@@ -28,6 +28,7 @@ const SiteSettings = () => {
     const [logoTextColor, setLogoTextColor] = useState('#000000');
     const [logoTextBorderSize, setLogoTextBorderSize] = useState(0);
     const [logoTextBorderColor, setLogoTextBorderColor] = useState('#000000');
+    const [logoTextFontSize, setLogoTextFontSize] = useState(20);
 
     // Load initial values from context
     useEffect(() => {
@@ -43,6 +44,7 @@ const SiteSettings = () => {
             setLogoTextColor(settings.logoTextColor || '#000000');
             setLogoTextBorderSize(settings.logoTextBorderSize || 0);
             setLogoTextBorderColor(settings.logoTextBorderColor || '#000000');
+            setLogoTextFontSize(settings.logoTextFontSize || 20);
         }
     }, [settings]);
 
@@ -64,6 +66,7 @@ const SiteSettings = () => {
                     logoTextColor,
                     logoTextBorderSize: Number(logoTextBorderSize),
                     logoTextBorderColor,
+                    logoTextFontSize: Number(logoTextFontSize),
                     seo: {
                         title: seoTitle,
                         description: seoDescription,
@@ -308,6 +311,19 @@ const SiteSettings = () => {
                                                 className="font-mono h-10"
                                             />
                                         </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="logoTextFontSize">Logo Text Font Size (px)</Label>
+                                        <Input 
+                                            id="logoTextFontSize"
+                                            type="number"
+                                            min="8"
+                                            max="100"
+                                            value={logoTextFontSize}
+                                            onChange={(e) => setLogoTextFontSize(Number(e.target.value))}
+                                            placeholder="20"
+                                        />
                                     </div>
                                 </div>
                             </CardContent>

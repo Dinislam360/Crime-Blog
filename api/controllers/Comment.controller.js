@@ -2,11 +2,16 @@ import { handleError } from "../helpers/handleError.js"
 import Comment from "../models/comment.model.js"
 export const addcomment = async (req, res, next) => {
     try {
-        const { user, blogid, comment } = req.body
+        const { blogid, comment } = req.body
+        
+        if (!comment || typeof comment !== 'string' || comment.trim() === '') {
+            return next(handleError(400, 'Comment text is required.'))
+        }
+
         const newComment = new Comment({
-            user: user,
+            user: req.user._id, // Use authenticated user ID instead of body
             blogid: blogid,
-            comment: comment
+            comment: comment.trim()
         })
 
         await newComment.save()
@@ -86,6 +91,16 @@ export const getAllComments = async (req, res, next) => {
 export const deleteComment = async (req, res, next) => {
     try {
         const { commentid } = req.params
+        const comment = await Comment.findById(commentid)
+        if (!comment) {
+            return next(handleError(404, 'Comment not found.'))
+        }
+
+        // Only allow comment author or admin to delete
+        if (comment.user.toString() !== req.user._id && req.user.role !== 'admin') {
+            return next(handleError(403, 'You are not authorized to delete this comment.'))
+        }
+
         await Comment.findByIdAndDelete(commentid)
 
         res.status(200).json({

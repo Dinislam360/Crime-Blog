@@ -3,6 +3,9 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import mongoose from 'mongoose'
+import helmet from 'helmet'
+import mongoSanitize from 'express-mongo-sanitize'
+import rateLimit from 'express-rate-limit'
 import AuthRoute from './routes/Auth.route.js'
 import UserRoute from './routes/User.route.js'
 import CategoryRoute from './routes/Category.route.js'
@@ -19,12 +22,34 @@ dotenv.config()
 const PORT = process.env.PORT
 const app = express()
 
+// Global rate limiter for API routes
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 300, // Limit each IP to 300 requests per 15 minutes
+    message: {
+        success: false,
+        message: 'Too many requests from this IP, please try again later.'
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+
+// Secure HTTP Headers
+app.use(helmet())
+
 app.use(cookieParser())
 app.use(express.json())
+
+// Prevent NoSQL Injection
+app.use(mongoSanitize())
+
 app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials: true
 }))
+
+// Apply rate limiting to all api endpoints
+app.use('/api', apiLimiter)
 
 
 // route setup  

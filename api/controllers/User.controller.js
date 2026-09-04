@@ -46,13 +46,48 @@ export const updateUser = async (req, res, next) => {
         const data = JSON.parse(req.body.data)
         const { userid } = req.params
 
+        // IDOR / Privilege escalation check
+        if (req.user._id !== userid && req.user.role !== 'admin') {
+            return next(handleError(403, 'You are not authorized to update this user.'))
+        }
+
         const user = await User.findById(userid)
-        user.name = data.name
-        user.email = data.email
+        if (!user) {
+            return next(handleError(404, 'User not found.'))
+        }
+
+        // Validate name and email inputs
+        if (data.name && typeof data.name === 'string') {
+            const trimmedName = data.name.trim()
+            if (trimmedName.length >= 2 && trimmedName.length <= 50) {
+                user.name = trimmedName
+            } else {
+                return next(handleError(400, 'Name must be between 2 and 50 characters.'))
+            }
+        }
+
+        if (data.email && typeof data.email === 'string') {
+            const trimmedEmail = data.email.trim().toLowerCase()
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(trimmedEmail)) {
+                return next(handleError(400, 'Please provide a valid email address.'))
+            }
+            // Check if email is already taken by another user
+            const existingEmailUser = await User.findOne({ email: trimmedEmail, _id: { $ne: userid } })
+            if (existingEmailUser) {
+                return next(handleError(409, 'Email is already in use.'))
+            }
+            user.email = trimmedEmail
+        }
+
         user.bio = data.bio
 
         if (data.password && data.password.length >= 8) {
-            const hashedPassword = bcryptjs.hashSync(data.password)
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+            if (!passwordRegex.test(data.password)) {
+                return next(handleError(400, 'Password must be at least 8 characters long and contain at least one letter and one number.'))
+            }
+            const hashedPassword = bcryptjs.hashSync(data.password, 10)
             user.password = hashedPassword
         }
 

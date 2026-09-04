@@ -60,7 +60,7 @@ export const getSiteSettings = async (req, res, next) => {
 // Update site settings (admin only)
 export const updateSiteSettings = async (req, res, next) => {
     try {
-        const { websiteName, websiteTitle, footerText, seo, logoDisplayMode, logoTextColor, logoTextBorderSize, logoTextBorderColor } = req.body;
+        const { websiteName, websiteTitle, footerText, seo, logoDisplayMode, logoTextColor, logoTextBorderSize, logoTextBorderColor, logoTextFontSize } = req.body;
         
         let settings = await SiteSettings.findOne();
         
@@ -76,6 +76,7 @@ export const updateSiteSettings = async (req, res, next) => {
         if (logoTextColor !== undefined) settings.logoTextColor = logoTextColor;
         if (logoTextBorderSize !== undefined) settings.logoTextBorderSize = logoTextBorderSize;
         if (logoTextBorderColor !== undefined) settings.logoTextBorderColor = logoTextBorderColor;
+        if (logoTextFontSize !== undefined) settings.logoTextFontSize = logoTextFontSize;
         
         // Update SEO settings
         if (seo) {

@@ -1,20 +1,49 @@
 import { handleError } from "../helpers/handleError.js"
 import User from "../models/user.model.js"
+import { validateEmail } from "../helpers/emailValidator.js"
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+
 export const Register = async (req, res, next) => {
     try {
         const { name, email, password } = req.body
-        const checkuser = await User.findOne({ email })
-        if (checkuser) {
-            // user already registered 
-            next(handleError(409, 'User already registered.'))
+
+        // Basic parameter type and presence checks
+        if (!name || typeof name !== 'string' || !email || typeof email !== 'string' || !password || typeof password !== 'string') {
+            return next(handleError(400, 'All fields are required and must be valid text.'))
         }
 
-        const hashedPassword = bcryptjs.hashSync(password)
+        const trimmedName = name.trim()
+        if (trimmedName.length < 2 || trimmedName.length > 50) {
+            return next(handleError(400, 'Name must be between 2 and 50 characters.'))
+        }
+
+        // Email validation & disposable email check
+        const emailValidation = validateEmail(email)
+        if (!emailValidation.isValid) {
+            return next(handleError(400, emailValidation.error))
+        }
+
+        const targetEmail = email.trim().toLowerCase()
+
+        // Password strength requirement: at least 8 characters, 1 letter, 1 number
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return next(handleError(400, 'Password must be at least 8 characters long and contain at least one letter and one number.'))
+        }
+
+        const checkuser = await User.findOne({ email: targetEmail })
+        if (checkuser) {
+            // user already registered 
+            return next(handleError(409, 'User already registered.'))
+        }
+
+        const hashedPassword = bcryptjs.hashSync(password, 10)
         // register user  
         const user = new User({
-            name, email, password: hashedPassword
+            name: trimmedName, 
+            email: targetEmail, 
+            password: hashedPassword
         })
 
         await user.save();
@@ -33,7 +62,15 @@ export const Register = async (req, res, next) => {
 export const Login = async (req, res, next) => {
     try {
         const { email, password } = req.body
-        const user = await User.findOne({ email })
+
+        // Validate type constraints to prevent NoSQL operator injection bypassing
+        if (!email || typeof email !== 'string' || !password || typeof password !== 'string') {
+            return next(handleError(400, 'Invalid email or password format.'))
+        }
+
+        const targetEmail = email.trim().toLowerCase()
+
+        const user = await User.findOne({ email: targetEmail })
         if (!user) {
             return next(handleError(404, 'Invalid login credentials.'))
         }

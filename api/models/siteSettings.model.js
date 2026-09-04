@@ -50,6 +50,10 @@ const siteSettingsSchema = new mongoose.Schema({
         type: String,
         default: '#000000'
     },
+    logoTextFontSize: {
+        type: Number,
+        default: 20
+    },
     seo: {
         title: {
             type: String,

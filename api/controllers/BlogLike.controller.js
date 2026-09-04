@@ -2,7 +2,9 @@ import { handleError } from "../helpers/handleError.js"
 import BlogLike from "../models/bloglike.model.js"
 export const doLike = async (req, res, next) => {
     try {
-        const { user, blogid } = req.body
+        const { blogid } = req.body
+        const user = req.user._id // Securely fetch user from authentication token
+
         let like
         like = await BlogLike.findOne({ user, blogid })
         if (!like) {
