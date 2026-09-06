@@ -26,6 +26,29 @@ const generateMetaDescription = (htmlContent) => {
     return trimmed.trim() + '...'
 }
 
+// Escape values injected into HTML attributes so quotes/special chars in titles never break meta tags
+const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
+// Facebook's preferred OG image is 1200x630 (1.91:1). Cloudinary can generate it on the fly,
+// and declaring width/height lets Facebook render the preview immediately (no async image fetch).
+const getOgImageVariants = (url) => {
+    const raw = String(url || '')
+    const match = raw.match(/^(https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(v\d+\/.+)$/)
+    if (match) {
+        return {
+            url: `${match[1]}w_1200,h_630,c_fill,q_auto,f_jpg/${match[2]}`,
+            width: 1200,
+            height: 630,
+        }
+    }
+    return { url: raw, width: null, height: null }
+}
+
 router.get('/render', async (req, res, next) => {
     try {
         const path = req.query.path || '/'
@@ -94,33 +117,46 @@ router.get('/render', async (req, res, next) => {
 
         const fullUrl = `${baseUrl}${path}`
 
+        // Sanitized values for safe injection into HTML attributes
+        const safeTitle = escapeHtml(title)
+        const safeDescription = escapeHtml(description)
+        const safeKeywords = escapeHtml(keywords)
+        const safeAuthor = escapeHtml(author)
+        const safeSiteName = escapeHtml(settings?.websiteName || 'My Blog')
+        const ogImage = getOgImageVariants(image)
+
         // Construct HTML that mimics client/index.html but with injected headers
         const html = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title}</title>
-    <meta name="description" content="${description}" />
-    <meta name="keywords" content="${keywords}" />
-    <meta name="author" content="${author}" />
+    <title>${safeTitle}</title>
+    <meta name="description" content="${safeDescription}" />
+    <meta name="keywords" content="${safeKeywords}" />
+    <meta name="author" content="${safeAuthor}" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="${type}" />
     <meta property="og:url" content="${fullUrl}" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description}" />
-    ${image ? `<meta property="og:image" content="${image}" />` : ''}
+    <meta property="og:site_name" content="${safeSiteName}" />
+    <meta property="og:title" content="${safeTitle}" />
+    <meta property="og:description" content="${safeDescription}" />
+    ${ogImage.url ? `<meta property="og:image" content="${escapeHtml(ogImage.url)}" />
+    <meta property="og:image:alt" content="${safeTitle}" />${ogImage.width ? `
+    <meta property="og:image:width" content="${ogImage.width}" />
+    <meta property="og:image:height" content="${ogImage.height}" />` : ''}` : ''}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="${fullUrl}" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${description}" />
-    ${image ? `<meta name="twitter:image" content="${image}" />` : ''}
+    <meta name="twitter:title" content="${safeTitle}" />
+    <meta name="twitter:description" content="${safeDescription}" />
+    ${ogImage.url ? `<meta name="twitter:image" content="${escapeHtml(ogImage.url)}" />
+    <meta name="twitter:image:alt" content="${safeTitle}" />` : ''}
 
     <!-- Favicon -->
-    <link rel="icon" href="${favicon}" />
+    <link rel="icon" href="${escapeHtml(favicon)}" />
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-64859L11YZ"></script>
@@ -137,7 +173,12 @@ router.get('/render', async (req, res, next) => {
   </body>
 </html>`
 
-        res.status(200).header('Content-Type', 'text/html').send(html)
+        // Cache at Vercel's edge so social media crawlers always get a fast response
+        // (avoids serverless cold-start timeouts that make Facebook drop the preview image)
+        res.status(200)
+            .header('Content-Type', 'text/html; charset=utf-8')
+            .header('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=86400')
+            .send(html)
     } catch (error) {
         next(error)
     }

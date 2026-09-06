@@ -49,7 +49,12 @@ app.use(cors({
 }))
 
 // Apply rate limiting to all api endpoints
-app.use('/api', apiLimiter)
+// (SEO render is exempt: social media crawlers hit it directly, and a 429 there
+// silently breaks their link previews)
+app.use('/api', (req, res, next) => {
+    if (req.path.startsWith('/seo/render')) return next()
+    return apiLimiter(req, res, next)
+})
 
 
 // route setup  
