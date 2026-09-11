@@ -31,7 +31,7 @@ const AppSidebar = () => {
     })
 
     return (
-        <Sidebar>
+        <Sidebar className="select-none">
             <SidebarHeader className="bg-white border-b px-4 py-3">
                 <Link to={RouteIndex} className="flex items-center">
                     <Logo />

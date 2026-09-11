@@ -57,18 +57,22 @@ const SignIn = () => {
     }
 
     return (
-        <div className='flex justify-center items-center h-screen w-screen'>
-            <Card className="w-[400px] p-5">
+        <div className='tilt-scene relative flex min-h-screen w-screen items-center justify-center overflow-hidden px-4'>
+            {/* ambient 3D background blobs */}
+            <div className='animate-pulse-glow absolute left-[-10%] top-[-10%] h-96 w-96 rounded-full bg-violet-400/20 blur-3xl' aria-hidden='true' />
+            <div className='animate-pulse-glow animation-delay-1000 absolute bottom-[-15%] right-[-10%] h-96 w-96 rounded-full bg-fuchsia-400/20 blur-3xl' aria-hidden='true' />
+            <Card className="tilt-card gradient-border w-[400px] rounded-2xl p-8 shadow-2xl shadow-violet-500/10">
                 <div className='flex justify-center items-center mb-2'>
                     <Link to={RouteIndex} className="flex items-center">
                         <Logo />
                     </Link>
                 </div>
-                <h1 className='text-2xl font-bold text-center mb-5'>Login Into Account</h1>
+                <h1 className='text-2xl font-extrabold tracking-tight text-center mb-6'>Welcome <span className='gradient-text'>Back</span></h1>
                 <div className=''>
                     <GoogleLogin />
-                    <div className='border my-5 flex justify-center items-center'>
-                        <span className='absolute bg-white text-sm'>Or</span>
+                    <div className='relative my-6 flex justify-center items-center'>
+                        <span className='absolute inset-x-0 top-1/2 border-t' aria-hidden='true' />
+                        <span className='relative bg-card px-4 text-sm font-medium text-muted-foreground'>Or continue with email</span>
                     </div>
 
                 </div>
@@ -107,10 +111,10 @@ const SignIn = () => {
                         </div>
 
                         <div className='mt-5'>
-                            <Button type="submit" className="w-full">Sign In</Button>
+                            <Button type="submit" className="w-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 shadow-md shadow-violet-500/30 transition-all hover:shadow-lg">Sign In</Button>
                             <div className='mt-5 text-sm flex justify-center items-center gap-2'>
                                 <p>Don&apos;t have account?</p>
-                                <Link className='text-blue-500 hover:underline' to={RouteSignUp}>Sign Up</Link>
+                                <Link className='font-semibold text-primary hover:underline' to={RouteSignUp}>Sign Up</Link>
                             </div>
                         </div>
                     </form>

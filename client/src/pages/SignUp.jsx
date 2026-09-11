@@ -19,8 +19,16 @@ const SignUp = () => {
     const formSchema = z.object({
         name: z.string().min(3, 'Name must be at least 3 character long.'),
         email: z.string().email(),
-        password: z.string().min(8, 'Password must be at least 8 character long'),
-        confirmPassword: z.string().refine(data => data.password === data.confirmPassword, 'Password and confirm password should be same.')
+        // Must match the server-side policy in api/controllers/Auth.controller.js:
+        // at least 8 characters, with at least one letter and one number.
+        password: z.string().min(8, 'Password must be at least 8 character long').regex(
+            /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/,
+            'Password must contain at least one letter and one number.'
+        ),
+        confirmPassword: z.string()
+    }).refine(data => data.password === data.confirmPassword, {
+        message: 'Password and confirm password should be same.',
+        path: ['confirmPassword']
     })
 
     const form = useForm({
@@ -53,13 +61,17 @@ const SignUp = () => {
     }
 
     return (
-        <div className='flex justify-center items-center h-screen w-screen'>
-            <Card className="w-[400px] p-5">
-                <h1 className='text-2xl font-bold text-center mb-5'>Create Your Account</h1>
+        <div className='tilt-scene relative flex min-h-screen w-screen items-center justify-center overflow-hidden px-4'>
+            {/* ambient 3D background blobs */}
+            <div className='animate-pulse-glow absolute left-[-10%] top-[-10%] h-96 w-96 rounded-full bg-violet-400/20 blur-3xl' aria-hidden='true' />
+            <div className='animate-pulse-glow animation-delay-1000 absolute bottom-[-15%] right-[-10%] h-96 w-96 rounded-full bg-fuchsia-400/20 blur-3xl' aria-hidden='true' />
+            <Card className="tilt-card gradient-border w-[400px] rounded-2xl p-8 shadow-2xl shadow-violet-500/10">
+                <h1 className='text-2xl font-extrabold tracking-tight text-center mb-6'>Create Your <span className='gradient-text'>Account</span></h1>
                 <div className=''>
                     <GoogleLogin />
-                    <div className='border my-5 flex justify-center items-center'>
-                        <span className='absolute bg-white text-sm'>Or</span>
+                    <div className='relative my-6 flex justify-center items-center'>
+                        <span className='absolute inset-x-0 top-1/2 border-t' aria-hidden='true' />
+                        <span className='relative bg-card px-4 text-sm font-medium text-muted-foreground'>Or continue with email</span>
                     </div>
 
                 </div>
@@ -129,10 +141,10 @@ const SignUp = () => {
                         </div>
 
                         <div className='mt-5'>
-                            <Button type="submit" className="w-full">Sign Up</Button>
+                            <Button type="submit" className="w-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 shadow-md shadow-violet-500/30 transition-all hover:shadow-lg">Sign Up</Button>
                             <div className='mt-5 text-sm flex justify-center items-center gap-2'>
                                 <p>Already have account?</p>
-                                <Link className='text-blue-500 hover:underline' to={RouteSignIn}>Sign In</Link>
+                                <Link className='font-semibold text-primary hover:underline' to={RouteSignIn}>Sign In</Link>
                             </div>
                         </div>
                     </form>

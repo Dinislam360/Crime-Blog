@@ -72,11 +72,11 @@ export const getAllComments = async (req, res, next) => {
         const user = req.user
         let comments
         if (user.role === 'admin') {
-            comments = await Comment.find().populate('blogid', 'title').populate('user', 'name')
+            comments = await Comment.find().populate('blogid', 'title').populate('user', 'name').sort({ createdAt: -1 })
 
         } else {
 
-            comments = await Comment.find({ user: user._id }).populate('blogid', 'title').populate('user', 'name')
+            comments = await Comment.find({ user: user._id }).populate('blogid', 'title').populate('user', 'name').sort({ createdAt: -1 })
         }
 
         res.status(200).json({

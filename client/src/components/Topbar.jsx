@@ -61,9 +61,9 @@ const Topbar = () => {
     }
 
     return (
-        <div className='flex justify-between items-center h-16 fixed w-full z-20 bg-white px-5 border-b'>
+        <div className='flex justify-between items-center h-16 fixed w-full z-20 glass border-b px-5'>
             <div className='flex justify-center items-center gap-2'>
-                <button onClick={toggleSidebar} className='md:hidden' type='button'>
+                <button onClick={toggleSidebar} className='md:hidden rounded-lg p-2 transition-colors hover:bg-accent' type='button' aria-label='Open menu'>
                     <AiOutlineMenu />
                 </button>
                 <Link to={RouteIndex} className="flex items-center">
@@ -71,18 +71,18 @@ const Topbar = () => {
                 </Link>
             </div>
             <div className='w-[500px]'>
-                <div className={`md:relative md:block absolute bg-white left-0 w-full md:top-0 top-16 md:p-0 p-5 ${showSearch ? 'block' : 'hidden'}`}>
+                <div className={`glass md:relative md:block absolute rounded-b-xl left-0 w-full md:top-0 top-16 md:p-0 md:rounded-none p-5 shadow-xl md:shadow-none ${showSearch ? 'block' : 'hidden'}`}>
                     <SearchBox />
                 </div>
             </div>
             <div className='flex items-center gap-5'>
 
-                <button onClick={toggleSearch} type='button' className='md:hidden block'>
+                <button onClick={toggleSearch} type='button' aria-label='Toggle search' className='rounded-lg p-2 transition-colors hover:bg-accent md:hidden block'>
                     <IoMdSearch size={25} />
                 </button>
 
                 {!user.isLoggedIn ?
-                    <Button asChild className="rounded-full">
+                    <Button asChild className="rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 shadow-md shadow-violet-500/30 transition-all hover:shadow-lg hover:shadow-fuchsia-500/40">
                         <Link to={RouteSignIn}  >
                             <MdLogin />
                             Sign In
