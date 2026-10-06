@@ -1,5 +1,6 @@
 import AppSidebar from '@/components/AppSidebar'
 import Footer from '@/components/Footer'
+import GlobalAds from '@/components/GlobalAds'
 import Topbar from '@/components/Topbar'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import React from 'react'
@@ -9,6 +10,7 @@ const Layout = () => {
     return (
 
         <SidebarProvider>
+            <GlobalAds />
             <Topbar />
             <AppSidebar />
             <main className='flex-1 min-w-0 overflow-x-clip'>

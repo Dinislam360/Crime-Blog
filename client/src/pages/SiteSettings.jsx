@@ -7,13 +7,46 @@ import { Textarea } from '@/components/ui/textarea';
 import { useSiteSettings } from '@/context/SiteSettingsContext';
 import { getEnv } from '@/helpers/getEnv';
 import { showToast } from '@/helpers/showToast';
-import { LuUpload, LuRefreshCw, LuGlobe, LuImage, LuSearch } from 'react-icons/lu';
+import { LuUpload, LuRefreshCw, LuGlobe, LuImage, LuSearch, LuMegaphone } from 'react-icons/lu';
+
+const DEFAULT_AD_CODES = {
+    socialBar: '<script src="https://pl23245113.profitableratecpmnetwork.com/c1/7a/bf/c17abf9bbd3f32e8257cc062711070f1.js"></script>',
+    popunder: '<script src="https://pl23244884.profitableratecpmnetwork.com/49/8b/bd/498bbdf2fee066a907fc67c421e9756b.js"></script>',
+    nativeBanner: '<script async="async" data-cfasync="false" src="https://pl23254725.profitableratecpmnetwork.com/ab9c6b91c17283bc241ac874128f89f3/invoke.js"></script>\n<div id="container-ab9c6b91c17283bc241ac874128f89f3"></div>',
+    middleBanner: `<script>\n  atOptions = {\n    'key' : '6389c7b68f0573384a52dc0f9997edf4',\n    'format' : 'iframe',\n    'height' : 90,\n    'width' : 728,\n    'params' : {}\n  };\n</script>\n<script src="https://www.highrevenueformat.com/6389c7b68f0573384a52dc0f9997edf4/invoke.js"></script>`,
+    customCode: ''
+};
+
+const AD_SLOTS = [
+    { key: 'socialBar', title: '1. Social Bar', hint: 'Shows on every public client page (full site).' },
+    { key: 'popunder', title: '2. Popunder', hint: 'Shows on every public client page (full site).' },
+    { key: 'nativeBanner', title: '3. Native Banner - End of blog post', hint: 'Shows only at the end of the blog post. Responsive on mobile & desktop.' },
+    { key: 'middleBanner', title: '4. Banner - Middle of blog post', hint: 'Shows only in the middle of the blog post. Responsive on mobile & desktop.' },
+    { key: 'customCode', title: '5. Custom Code', hint: 'Your own extra ad / tracking code. Shows on every public client page.' },
+];
+
+// Small ON/OFF toggle built without extra dependencies
+const AdToggle = ({ checked, onChange, id }) => (
+    <button
+        type="button"
+        id={id}
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${checked ? 'bg-green-500' : 'bg-gray-300'}`}
+    >
+        <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`}
+        />
+    </button>
+);
 
 const SiteSettings = () => {
     const { settings, refreshSettings, loading: contextLoading } = useSiteSettings();
     const [loading, setLoading] = useState(false);
     const [logoUploading, setLogoUploading] = useState(false);
     const [faviconUploading, setFaviconUploading] = useState(false);
+    const [adsSaving, setAdsSaving] = useState(false);
 
     // Form states
     const [websiteName, setWebsiteName] = useState('');
@@ -30,6 +63,15 @@ const SiteSettings = () => {
     const [logoTextBorderColor, setLogoTextBorderColor] = useState('#000000');
     const [logoTextFontSize, setLogoTextFontSize] = useState(20);
 
+    // Ads states: { socialBar: {enabled, code}, ... }
+    const [ads, setAds] = useState({
+        socialBar: { enabled: false, code: DEFAULT_AD_CODES.socialBar },
+        popunder: { enabled: false, code: DEFAULT_AD_CODES.popunder },
+        nativeBanner: { enabled: false, code: DEFAULT_AD_CODES.nativeBanner },
+        middleBanner: { enabled: false, code: DEFAULT_AD_CODES.middleBanner },
+        customCode: { enabled: false, code: '' },
+    });
+
     // Load initial values from context
     useEffect(() => {
         if (settings) {
@@ -45,6 +87,28 @@ const SiteSettings = () => {
             setLogoTextBorderSize(settings.logoTextBorderSize || 0);
             setLogoTextBorderColor(settings.logoTextBorderColor || '#000000');
             setLogoTextFontSize(settings.logoTextFontSize || 20);
+            setAds({
+                socialBar: {
+                    enabled: Boolean(settings.ads?.socialBar?.enabled),
+                    code: settings.ads?.socialBar?.code ?? DEFAULT_AD_CODES.socialBar
+                },
+                popunder: {
+                    enabled: Boolean(settings.ads?.popunder?.enabled),
+                    code: settings.ads?.popunder?.code ?? DEFAULT_AD_CODES.popunder
+                },
+                nativeBanner: {
+                    enabled: Boolean(settings.ads?.nativeBanner?.enabled),
+                    code: settings.ads?.nativeBanner?.code ?? DEFAULT_AD_CODES.nativeBanner
+                },
+                middleBanner: {
+                    enabled: Boolean(settings.ads?.middleBanner?.enabled),
+                    code: settings.ads?.middleBanner?.code ?? DEFAULT_AD_CODES.middleBanner
+                },
+                customCode: {
+                    enabled: Boolean(settings.ads?.customCode?.enabled),
+                    code: settings.ads?.customCode?.code ?? ''
+                },
+            });
         }
     }, [settings]);
 
@@ -85,6 +149,31 @@ const SiteSettings = () => {
             showToast('error', error.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSaveAds = async (e) => {
+        if (e) e.preventDefault();
+        setAdsSaving(true);
+        try {
+            const res = await fetch(`${getEnv('VITE_API_BASE_URL')}/site-settings/update`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ ads })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.message || 'Failed to update ads');
+            }
+            showToast('success', 'Ads updated successfully!');
+            refreshSettings();
+        } catch (error) {
+            showToast('error', error.message);
+        } finally {
+            setAdsSaving(false);
         }
     };
 
@@ -380,6 +469,74 @@ const SiteSettings = () => {
                                         placeholder="Author / Organization name"
                                     />
                                 </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Ads Settings */}
+                        <Card className="border-orange-200">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <LuMegaphone className="text-orange-500" /> Ads Settings
+                                </CardTitle>
+                                <CardDescription>Control all ads shown on the public client website. Turn each slot ON/OFF and edit its code anytime.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                {AD_SLOTS.map((slot) => (
+                                    <div key={slot.key} className="rounded-lg border p-4 space-y-3 bg-orange-50/30">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div>
+                                                <p className="font-semibold text-sm">{slot.title}</p>
+                                                <p className="text-xs text-gray-500">{slot.hint}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <span className={`text-xs font-bold ${ads[slot.key]?.enabled ? 'text-green-600' : 'text-gray-400'}`}>
+                                                    {ads[slot.key]?.enabled ? 'ON' : 'OFF'}
+                                                </span>
+                                                <AdToggle
+                                                    id={`ad-toggle-${slot.key}`}
+                                                    checked={Boolean(ads[slot.key]?.enabled)}
+                                                    onChange={(val) => setAds((prev) => ({
+                                                        ...prev,
+                                                        [slot.key]: { ...prev[slot.key], enabled: val }
+                                                    }))}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor={`ad-code-${slot.key}`}>Ad code (paste your script / HTML here)</Label>
+                                            <Textarea
+                                                id={`ad-code-${slot.key}`}
+                                                value={ads[slot.key]?.code || ''}
+                                                onChange={(e) => setAds((prev) => ({
+                                                    ...prev,
+                                                    [slot.key]: { ...prev[slot.key], code: e.target.value }
+                                                }))}
+                                                placeholder="Paste ad script here..."
+                                                rows={4}
+                                                className="font-mono text-xs"
+                                            />
+                                            <div className="flex justify-end">
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-xs h-7"
+                                                    onClick={() => setAds((prev) => ({
+                                                        ...prev,
+                                                        [slot.key]: { ...prev[slot.key], code: DEFAULT_AD_CODES[slot.key] || '' }
+                                                    }))}
+                                                >
+                                                    Reset to default
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                <Button type="button" onClick={handleSaveAds} className="w-full h-12 text-lg" disabled={adsSaving}>
+                                    {adsSaving && <LuRefreshCw className="animate-spin mr-2" />}
+                                    Save Ads Settings
+                                </Button>
+                                <p className="text-xs text-gray-400 text-center">Ads only appear on the public client pages — never inside admin / login screens.</p>
                             </CardContent>
                         </Card>
 

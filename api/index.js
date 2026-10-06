@@ -35,7 +35,13 @@ const apiLimiter = rateLimit({
 })
 
 // Secure HTTP Headers
-app.use(helmet())
+// contentSecurityPolicy is disabled so third-party ad network scripts
+// (profitableratecpmnetwork / highrevenueformat) can load on the client.
+// Other helmet protections (hsts, frameguard, etc.) stay enabled.
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}))
 
 app.use(cookieParser())
 app.use(express.json())

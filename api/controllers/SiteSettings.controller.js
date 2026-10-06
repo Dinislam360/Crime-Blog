@@ -60,14 +60,14 @@ export const getSiteSettings = async (req, res, next) => {
 // Update site settings (admin only)
 export const updateSiteSettings = async (req, res, next) => {
     try {
-        const { websiteName, websiteTitle, footerText, seo, logoDisplayMode, logoTextColor, logoTextBorderSize, logoTextBorderColor, logoTextFontSize } = req.body;
-        
+        const { websiteName, websiteTitle, footerText, seo, logoDisplayMode, logoTextColor, logoTextBorderSize, logoTextBorderColor, logoTextFontSize, ads } = req.body;
+
         let settings = await SiteSettings.findOne();
-        
+
         if (!settings) {
             settings = new SiteSettings();
         }
-        
+
         // Update basic settings
         if (websiteName !== undefined) settings.websiteName = websiteName;
         if (websiteTitle !== undefined) settings.websiteTitle = websiteTitle;
@@ -77,7 +77,7 @@ export const updateSiteSettings = async (req, res, next) => {
         if (logoTextBorderSize !== undefined) settings.logoTextBorderSize = logoTextBorderSize;
         if (logoTextBorderColor !== undefined) settings.logoTextBorderColor = logoTextBorderColor;
         if (logoTextFontSize !== undefined) settings.logoTextFontSize = logoTextFontSize;
-        
+
         // Update SEO settings
         if (seo) {
             settings.seo = {
@@ -86,6 +86,19 @@ export const updateSiteSettings = async (req, res, next) => {
                 keywords: seo.keywords !== undefined ? seo.keywords : settings.seo.keywords,
                 author: seo.author !== undefined ? seo.author : settings.seo.author
             };
+        }
+
+        // Update Ads settings (each slot: { enabled, code })
+        if (ads) {
+            if (!settings.ads) settings.ads = {};
+            const slots = ['socialBar', 'popunder', 'nativeBanner', 'middleBanner', 'customCode'];
+            for (const slot of slots) {
+                if (ads[slot] !== undefined && ads[slot] !== null) {
+                    if (!settings.ads[slot]) settings.ads[slot] = { enabled: false, code: '' };
+                    if (ads[slot].enabled !== undefined) settings.ads[slot].enabled = Boolean(ads[slot].enabled);
+                    if (ads[slot].code !== undefined) settings.ads[slot].code = String(ads[slot].code);
+                }
+            }
         }
         
         await settings.save();

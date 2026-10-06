@@ -4,17 +4,19 @@ import CommentList from '@/components/CommentList'
 import LikeCount from '@/components/LikeCount'
 import Loading from '@/components/Loading'
 import RelatedBlog from '@/components/RelatedBlog'
+import BlogContentWithAds from '@/components/BlogContentWithAds'
 import { Avatar } from '@/components/ui/avatar'
 import { getEnv } from '@/helpers/getEnv'
 import { useFetch } from '@/hooks/useFetch'
+import { useSiteSettings } from '@/context/SiteSettingsContext'
 import { AvatarImage } from '@radix-ui/react-avatar'
-import { decode } from 'entities'
 import moment from 'moment'
 import React from 'react'
 import { useParams } from 'react-router-dom'
 
 const SingleBlogDetails = () => {
     const { blog, category } = useParams()
+    const { settings } = useSiteSettings()
 
     const { data, loading, error } = useFetch(`${getEnv('VITE_API_BASE_URL')}/blog/get-blog/${blog}`, {
         method: 'get',
@@ -92,11 +94,13 @@ const SingleBlogDetails = () => {
                                 className='w-full h-auto max-h-[500px] object-cover'
                             />
                         </div>
-                        <div className="ql-container ql-snow" style={{ border: 'none', height: 'auto' }}>
-                            <div className="ql-editor" style={{ padding: 0, height: 'auto', overflowY: 'visible' }} dangerouslySetInnerHTML={{ __html: decode(data.blog.blogContent) || '' }}>
-
-                            </div>
-                        </div>
+                        {/* Blog body with Middle Banner (middle of post) + Native Banner (end of post).
+                            Both are fully responsive and controlled from Site Settings → Ads. */}
+                        <BlogContentWithAds
+                            html={data.blog.blogContent}
+                            middleBannerCode={settings?.ads?.middleBanner?.enabled ? settings?.ads?.middleBanner?.code : ''}
+                            nativeBannerCode={settings?.ads?.nativeBanner?.enabled ? settings?.ads?.nativeBanner?.code : ''}
+                        />
                     </article>
 
                     <div className='border-t pt-5'>
